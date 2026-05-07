@@ -1,0 +1,4 @@
+[console_scripts]
+ait_star_node = ait_star_sim.ait_star_node:main
+path_follower = ait_star_sim.path_follower:main
+

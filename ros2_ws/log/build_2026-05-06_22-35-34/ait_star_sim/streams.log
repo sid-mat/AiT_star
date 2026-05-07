@@ -1,0 +1,28 @@
+[0.336s] Invoking command in '/home/jigar/AiT_star/ros2_ws/build/ait_star_sim': PYTHONPATH=/home/jigar/AiT_star/ros2_ws/build/ait_star_sim/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/jigar/AiT_star/ros2_ws/install/ait_star_sim/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/jigar/AiT_star/ros2_ws/build/ait_star_sim/build --no-deps symlink_data
+[0.483s] running develop
+[0.580s] running egg_info
+[0.580s] creating ait_star_sim.egg-info
+[0.580s] writing ait_star_sim.egg-info/PKG-INFO
+[0.580s] writing dependency_links to ait_star_sim.egg-info/dependency_links.txt
+[0.581s] writing entry points to ait_star_sim.egg-info/entry_points.txt
+[0.581s] writing requirements to ait_star_sim.egg-info/requires.txt
+[0.581s] writing top-level names to ait_star_sim.egg-info/top_level.txt
+[0.581s] writing manifest file 'ait_star_sim.egg-info/SOURCES.txt'
+[0.581s] reading manifest file 'ait_star_sim.egg-info/SOURCES.txt'
+[0.582s] writing manifest file 'ait_star_sim.egg-info/SOURCES.txt'
+[0.582s] running build_ext
+[0.583s] Creating /home/jigar/AiT_star/ros2_ws/install/ait_star_sim/lib/python3.10/site-packages/ait-star-sim.egg-link (link to .)
+[0.583s] Installing ait_star_node script to /home/jigar/AiT_star/ros2_ws/install/ait_star_sim/lib/ait_star_sim
+[0.583s] Installing path_follower script to /home/jigar/AiT_star/ros2_ws/install/ait_star_sim/lib/ait_star_sim
+[0.583s] 
+[0.583s] Installed /home/jigar/AiT_star/ros2_ws/build/ait_star_sim
+[0.583s] running symlink_data
+[0.583s] creating /home/jigar/AiT_star/ros2_ws/install/ait_star_sim/share/ament_index
+[0.584s] creating /home/jigar/AiT_star/ros2_ws/install/ait_star_sim/share/ament_index/resource_index
+[0.584s] creating /home/jigar/AiT_star/ros2_ws/install/ait_star_sim/share/ament_index/resource_index/packages
+[0.584s] symbolically linking /home/jigar/AiT_star/ros2_ws/build/ait_star_sim/resource/ait_star_sim -> /home/jigar/AiT_star/ros2_ws/install/ait_star_sim/share/ament_index/resource_index/packages
+[0.584s] symbolically linking /home/jigar/AiT_star/ros2_ws/build/ait_star_sim/package.xml -> /home/jigar/AiT_star/ros2_ws/install/ait_star_sim/share/ait_star_sim
+[0.584s] creating /home/jigar/AiT_star/ros2_ws/install/ait_star_sim/share/ait_star_sim/launch
+[0.584s] creating /home/jigar/AiT_star/ros2_ws/install/ait_star_sim/share/ait_star_sim/worlds
+[0.584s] symbolically linking /home/jigar/AiT_star/ros2_ws/build/ait_star_sim/worlds/ait_world.world -> /home/jigar/AiT_star/ros2_ws/install/ait_star_sim/share/ait_star_sim/worlds
+[0.599s] Invoked command in '/home/jigar/AiT_star/ros2_ws/build/ait_star_sim' returned '0': PYTHONPATH=/home/jigar/AiT_star/ros2_ws/build/ait_star_sim/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/jigar/AiT_star/ros2_ws/install/ait_star_sim/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/jigar/AiT_star/ros2_ws/build/ait_star_sim/build --no-deps symlink_data

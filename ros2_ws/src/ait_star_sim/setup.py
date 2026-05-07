@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 import os, glob
 
 package_name = 'ait_star_sim'
@@ -6,7 +6,7 @@ package_name = 'ait_star_sim'
 setup(
     name=package_name,
     version='0.1.0',
-    packages=[package_name],
+    packages=find_packages(),   # ← finds ait_star_sim, planners, utils automatically
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
