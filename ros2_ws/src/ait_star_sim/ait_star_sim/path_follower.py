@@ -6,15 +6,11 @@ import math
 
 
 class PathFollower(Node):
-    """
-    Pure Pursuit path follower.
-    Instead of targeting one waypoint at a time, it looks ahead
-    a fixed distance (lookahead) on the path and steers toward
-    that point. This eliminates oscillation completely.
-    """
-    LOOKAHEAD  = 0.8   # metres ahead to target — increase if robot wobbles
-    MAX_LINEAR = 0.22  # m/s  (TurtleBot3 Burger max is 0.22)
-    MAX_ANGULAR= 1.2   # rad/s
+
+    LOOKAHEAD   = 0.4   # metres — short so robot stays on path
+    MAX_LINEAR  = 0.15  # m/s — slow and steady
+    MAX_ANGULAR = 1.0   # rad/s
+    WP_SPACING  = 0.15  # interpolation density (metres between points)
 
     def __init__(self):
         super().__init__('path_follower')
@@ -25,7 +21,7 @@ class PathFollower(Node):
             Odometry, '/odom', self.odom_cb, 10)
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
 
-        self.path      = []    # list of (x, y)
+        self.path      = []
         self.x = self.y = self.yaw = 0.0
         self.offset_x  = None
         self.offset_y  = None
@@ -36,18 +32,24 @@ class PathFollower(Node):
         self.last_x = self.last_y = 0.0
         self.recovering  = False
         self.recover_cnt = 0
+        self.recover_dir = 1   # alternates so it doesn't always turn same way
 
         self.create_timer(0.1, self.loop)
-        self.get_logger().info('Pure Pursuit follower ready')
+        self.get_logger().info('Path Follower (dense interpolation) ready')
 
-    # ── Callbacks ─────────────────────────────────────────────────
+    # ── Callbacks ────────────────────────────────────────────────
 
     def path_cb(self, msg):
-        self.path = [(p.pose.position.x, p.pose.position.y)
-                     for p in msg.poses]
+        raw = [(p.pose.position.x, p.pose.position.y)
+               for p in msg.poses]
+
+        # Interpolate raw waypoints into a dense path
+        self.path = self._interpolate(raw, self.WP_SPACING)
         self.goal_done = False
+
         self.get_logger().info(
-            f'Path received: {len(self.path)} waypoints. Moving!')
+            f'Path: {len(raw)} waypoints → '
+            f'{len(self.path)} dense points ({self.WP_SPACING}m spacing)')
 
     def odom_cb(self, msg):
         rx = msg.pose.pose.position.x
@@ -64,98 +66,115 @@ class PathFollower(Node):
             2*(q.w*q.z + q.x*q.y),
             1 - 2*(q.y*q.y + q.z*q.z))
 
-    # ── Main control loop ──────────────────────────────────────────
+    # ── Control loop ─────────────────────────────────────────────
 
     def loop(self):
         if self.offset_x is None or not self.path or self.goal_done:
             return
 
-        # Check if we reached the final goal
+        # Goal check
         gx, gy = self.path[-1]
         if math.hypot(gx - self.x, gy - self.y) < 0.35:
             self.cmd_pub.publish(Twist())
             self.goal_done = True
-            self.get_logger().info('Goal reached! Stopping.')
+            self.get_logger().info('Goal reached!')
             return
 
-        # Recovery behaviour
+        # Recovery
         if self.recovering:
             cmd = Twist()
             cmd.linear.x  = -0.1
-            cmd.angular.z =  0.6
+            cmd.angular.z =  self.recover_dir * 0.8
             self.cmd_pub.publish(cmd)
             self.recover_cnt += 1
-            if self.recover_cnt > 20:
+            if self.recover_cnt > 25:   # ~2.5 s
                 self.recovering  = False
                 self.recover_cnt = 0
-                self.get_logger().info('Recovery done, resuming.')
+                self.recover_dir *= -1  # alternate direction next time
+                self.get_logger().info('Recovery done, resuming')
             return
 
-        # Stuck detection (check every 3 s)
+        # Stuck detection (every 3 s)
         self.stuck_count += 1
         if self.stuck_count % 30 == 0:
-            moved = math.hypot(self.x - self.last_x, self.y - self.last_y)
+            moved = math.hypot(self.x - self.last_x,
+                               self.y - self.last_y)
             self.last_x, self.last_y = self.x, self.y
             if moved < 0.04:
-                self.get_logger().warn('Stuck! Triggering recovery.')
+                self.get_logger().warn('Stuck! Recovering...')
                 self.recovering  = True
                 self.recover_cnt = 0
                 return
 
-        # Find lookahead point on path
+        # Find lookahead point
         target = self._lookahead_point()
         if target is None:
             return
 
-        tx, ty   = target
-        dx, dy   = tx - self.x, ty - self.y
-        dist     = math.hypot(dx, dy)
-        heading  = math.atan2(dy, dx)
-        err      = heading - self.yaw
+        tx, ty  = target
+        dx, dy  = tx - self.x, ty - self.y
+        dist    = math.hypot(dx, dy)
+        heading = math.atan2(dy, dx)
+        err     = heading - self.yaw
 
-        # Normalise angle to [-pi, pi]
         while err >  math.pi: err -= 2 * math.pi
         while err < -math.pi: err += 2 * math.pi
 
         cmd = Twist()
-        if abs(err) > 0.5:
-            # Turn toward target before moving forward
+        if abs(err) > 0.45:
+            # Rotate in place toward target
             cmd.angular.z = max(-self.MAX_ANGULAR,
-                                 min(self.MAX_ANGULAR, 1.5 * err))
-            cmd.linear.x  = 0.05   # creep forward slightly while turning
+                                 min(self.MAX_ANGULAR, 1.8 * err))
+            cmd.linear.x  = 0.0
         else:
-            # Heading is good — drive and steer gently
+            # Drive forward with gentle steering
             cmd.linear.x  = min(self.MAX_LINEAR, 0.4 * dist)
             cmd.angular.z = max(-self.MAX_ANGULAR,
                                  min(self.MAX_ANGULAR, 1.2 * err))
 
         self.cmd_pub.publish(cmd)
 
-    # ── Pure pursuit: find the point LOOKAHEAD metres ahead ───────
+    # ── Helpers ──────────────────────────────────────────────────
+
+    def _interpolate(self, waypoints, spacing):
+        """
+        Insert extra points between each pair of waypoints so that
+        no two consecutive points are more than `spacing` metres apart.
+        This keeps the lookahead target close to the robot at all times.
+        """
+        if len(waypoints) < 2:
+            return waypoints
+        dense = [waypoints[0]]
+        for i in range(len(waypoints) - 1):
+            x1, y1 = waypoints[i]
+            x2, y2 = waypoints[i + 1]
+            seg_len = math.hypot(x2 - x1, y2 - y1)
+            n_steps = max(1, int(math.ceil(seg_len / spacing)))
+            for j in range(1, n_steps + 1):
+                t = j / n_steps
+                dense.append((x1 + t * (x2 - x1),
+                               y1 + t * (y2 - y1)))
+        return dense
 
     def _lookahead_point(self):
         """
-        Walk along the path from the closest point forward until
-        we find a point that is LOOKAHEAD metres from the robot.
-        Returns that point as (x, y).
+        Find the closest point on the dense path, then walk
+        forward until we find one that is LOOKAHEAD metres away.
         """
-        # Find index of closest waypoint
-        closest_i = 0
-        closest_d = float('inf')
+        # Closest point index
+        best_i, best_d = 0, float('inf')
         for i, (px, py) in enumerate(self.path):
             d = math.hypot(px - self.x, py - self.y)
-            if d < closest_d:
-                closest_d = d
-                closest_i = i
+            if d < best_d:
+                best_d, best_i = d, i
 
-        # Walk forward from closest point to find lookahead target
-        for i in range(closest_i, len(self.path)):
+        # Walk forward from closest
+        for i in range(best_i, len(self.path)):
             px, py = self.path[i]
             if math.hypot(px - self.x, py - self.y) >= self.LOOKAHEAD:
                 return (px, py)
 
-        # If no point is far enough, just use the last waypoint
-        return self.path[-1]
+        return self.path[-1]   # fallback: final goal
 
 
 def main(args=None):
