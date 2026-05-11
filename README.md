@@ -108,6 +108,40 @@ ros2 run ait_star_sim ait_star_node
 ros2 run ait_star_sim path_follower
 ```
 
+### 3D Drone Planning Visualisation in RViz2 (ROS 2 Jazzy)
+
+Demonstrates AIT\*, RRT\*, and Informed RRT\* planning in a 3D workspace with a simulated quadrotor drone and three dynamic obstacle drones moving on Lissajous trajectories. Replanning triggers automatically whenever a dynamic obstacle invalidates the current path.
+
+**Additional dependencies**
+```bash
+# Deactivate conda first if active
+conda deactivate
+
+sudo apt install ros-jazzy-ompl \
+                 ros-jazzy-rviz2 \
+                 ros-jazzy-nav-msgs \
+                 ros-jazzy-visualization-msgs \
+                 ros-jazzy-tf2-ros \
+                 ros-jazzy-tf2-geometry-msgs -y
+```
+
+**Build**
+```bash
+cd AiT_star/ros2_ait_drone
+source /opt/ros/jazzy/setup.bash
+chmod +x scripts/*.py
+colcon build --packages-select ros2_ait_drone --symlink-install
+source install/setup.bash
+```
+
+**Run**
+```bash
+# Terminal 1 
+ros2 launch ros2_ait_drone drone_demo.launch.py 
+```
+
+A goal at (8, 8, 4) is published automatically after 2 seconds. RViz2 opens showing the 3D planning tree, optimal path, drone, and moving obstacle spheres.
+
 ---
 
 ## Algorithm Details
@@ -159,24 +193,34 @@ ros2 run ait_star_sim path_follower
 AiT_star/
 ├── planners/
 │   ├── __init__.py
-│   ├── ait_star.py               ← AIT* implementation
-│   ├── informed_rrt_star.py      ← Informed RRT* implementation
-│   └── rrt_star.py               ← RRT* implementation
+│   ├── ait_star.py               <- AIT* implementation
+│   ├── informed_rrt_star.py      <- Informed RRT* implementation
+│   └── rrt_star.py               <- RRT* implementation
 ├── utils/
 │   ├── __init__.py
-│   └── environment.py            ← 2D environment + collision checking
-├── results/                      ← Generated benchmark plots
+│   └── environment.py            <- 2D environment + collision checking
+├── results/                      <- Generated benchmark plots
 ├── ros2_ws/
 │   └── src/ait_star_sim/
 │       ├── ait_star_sim/
-│       │   ├── ait_star_node.py  ← ROS2 planner node
-│       │   └── path_follower.py  ← Pure Pursuit controller
+│       │   ├── ait_star_node.py  <- ROS2 planner node
+│       │   └── path_follower.py  <- Pure Pursuit controller
 │       ├── worlds/
-│       │   └── ait_world.world   ← Gazebo environment
+│       │   └── ait_world.world   <- Gazebo environment
 │       ├── launch/
 │       │   └── simulate.launch.py
 │       ├── package.xml
 │       └── setup.py
-├── main.py                       ← Benchmark runner
+├── ros2_ait_drone/               <- 3D drone planning (ROS 2 Jazzy)
+│   ├── src/planner_node.cpp      <- OMPL AIT*/RRT*/Informed RRT* planner
+│   ├── scripts/drone_sim.py      <- Simulated drone + dynamic obstacles
+│   ├── worlds/drone_demo.wbt     <- Webots world (optional Phase 2)
+│   ├── config/
+│   │   ├── demo_params.yaml
+│   │   └── rviz_config.rviz
+│   ├── launch/drone_demo.launch.py
+│   ├── CMakeLists.txt
+│   └── package.xml
+├── main.py                       <- Benchmark runner
 └── README.md
 ```
