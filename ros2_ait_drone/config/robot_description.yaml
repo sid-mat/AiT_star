@@ -1,0 +1,15 @@
+# robot_description.yaml
+# Maps Webots robot DEF names to their ROS2 driver plugins.
+# Used by webots_ros2_driver to know which Python class handles which robot.
+
+robots:
+  # Main planning drone
+  - name: main_drone
+    plugin: ros2_ait_drone.webots_drone_driver.WebotsDroneDriver
+    properties:
+      speed: "2.0"
+      waypoint_tolerance: "0.4"
+
+  # Supervisor robot that moves the obstacle drones
+  - name: supervisor
+    plugin: ros2_ait_drone.webots_obstacle_driver.WebotsObstacleDriver
