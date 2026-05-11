@@ -13,7 +13,7 @@
 ## Description
 
 Implements and benchmarks three asymptotically optimal sampling-based path planners — **RRT\***, **Informed RRT\***, and **AIT\*** (Adaptively Informed Trees) — on two 2D environments with circular obstacles. AIT\* is the primary algorithm, using batch sampling, a reverse Dijkstra adaptive heuristic, and lazy collision checking to converge to the optimal path faster than its predecessors. The final planned path is executed on a **TurtleBot3 Burger** robot in a **Gazebo** 3D simulation using ROS 2 Humble.
-
+**Github repo:** [https://github.com/sid-mat/AiT_star](https://github.com/sid-mat/AiT_star)
 ---
 
 ## Algorithms
